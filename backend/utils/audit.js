@@ -1,0 +1,1 @@
+export async function audit(prisma, { organizationId, actorId, action, resourceType, resourceId, ipHash, metadata }) { return prisma.auditLog.create({ data: { organizationId, actorId, action, resourceType, resourceId, ipHash, metadata } }); }

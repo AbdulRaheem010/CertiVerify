@@ -1,0 +1,4 @@
+import { env } from '../config/env.js';
+export async function sendEmail({ to, subject, text }) { if (!process.env.EMAIL_API_KEY) { if (!env.isProduction) console.info('[CertiVerify development email]', { to, subject }); return { delivered: false, mode: 'development-log' }; } throw new Error('Configure an email provider adapter before enabling EMAIL_API_KEY.'); }
+export const sendStaffInvitationEmail = ({ email, organizationName, role, url }) => sendEmail({ to: email, subject: `Join ${organizationName} on CertiVerify`, text: `You have been invited as ${role}. Accept your invitation: ${url}` });
+export const sendCertificateIssuedEmail = ({ email, title, certificateId, url }) => sendEmail({ to: email, subject: 'Your Certificate Has Been Issued', text: `${title} (${certificateId}) is ready. Verify it: ${url}` });
