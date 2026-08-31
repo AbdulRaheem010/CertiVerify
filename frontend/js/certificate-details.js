@@ -32,8 +32,9 @@ function render(c) {
   const url = verificationUrl(c);
   set('verification-url', url);
   qs('#verify-link').href = url;
-  qs('#pdf-link').href = c.certificateFileUrl || '#';
-  qs('#pdf-link').style.display = c.certificateFileUrl ? '' : 'none';
+  const hasPdf = Boolean(c.certificateFileUrl);
+  qs('#pdf-link').href = hasPdf ? `/api/certificates/${encodeURIComponent(c.id)}/file` : '#';
+  qs('#pdf-link').style.display = hasPdf ? '' : 'none';
   const revoked = c.status === 'REVOKED';
   qs('#revoke-btn').style.display = revoked ? 'none' : '';
   qs('#reissue-btn').style.display = revoked ? 'none' : '';
