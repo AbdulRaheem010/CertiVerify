@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://certiverify-0ewh.onrender.com/api/:path*"
+    },
+    {
+      "source": "/files/:path*",
+      "destination": "https://certiverify-0ewh.onrender.com/files/:path*"
+    }
+  ]
+}
