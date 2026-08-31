@@ -33,7 +33,7 @@ router.get('/dashboard', tenant.dashboard);
 router.get('/analytics', tenant.analytics);
 router.get('/audit-logs', tenant.auditLogs);
 router.get('/staff', allowRoles('ORGANIZATION_OWNER'), staff.list);
-router.post('/staff/invitations', allowRoles('ORGANIZATION_OWNER'), staff.invite);
+router.post('/staff/invitations', allowRoles('ORGANIZATION_OWNER'), validate(staffInvitationSchema), staff.invite);
 router.post('/staff/invitations/:id/revoke', allowRoles('ORGANIZATION_OWNER'), staff.revoke);
 router.route('/templates').get(templates.list).post(issueRoles, validate(templateSchema), templates.create);
 router.patch('/templates/:id', issueRoles, validate(templateSchema), templates.update);
