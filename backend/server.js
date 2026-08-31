@@ -5,7 +5,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import api from './routes/index.js';
 import { env } from './config/env.js';
-import { localStorageRoot } from './services/storage-service.js';
 import { csrfProtection } from './middleware/security.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 
@@ -17,7 +16,6 @@ app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], 
 app.use(express.json({ limit: '256kb', type: 'application/json' }));
 app.use(cookieParser());
 app.use('/api', csrfProtection, api);
-app.use('/files', express.static(localStorageRoot, { fallthrough: false, index: false, maxAge: env.isProduction ? '1h' : 0 }));
 app.use(express.static(path.join(root, 'frontend'), { extensions: ['html'], maxAge: env.isProduction ? '1h' : 0 }));
 app.use(notFoundHandler);
 app.use(errorHandler);
