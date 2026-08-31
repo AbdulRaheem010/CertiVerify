@@ -1,0 +1,4 @@
+import { api } from './api.js';
+import { protectPage } from './auth.js';
+import { escapeHtml } from './utils.js';
+document.addEventListener('DOMContentLoaded',async()=>{if(!(await protectPage()))return;try{const [stats,dash]=await Promise.all([api.get('/analytics'),api.get('/dashboard')]);document.querySelector('#a-total').textContent=stats.total??0;document.querySelector('#a-valid').textContent=stats.valid??0;document.querySelector('#a-revoked').textContent=stats.revoked??0;document.querySelector('#a-verifications').textContent=stats.verifications??0;document.querySelector('#a-recent').innerHTML=(dash.recent||[]).map(c=>`<tr><td>${escapeHtml(c.recipient?.name||'—')}</td><td>${escapeHtml(c.course?.name||'—')}</td><td>${escapeHtml(c.status)}</td><td>${c._count?.verifications||0}</td></tr>`).join('')||'<tr><td colspan="4">No certificate activity yet.</td></tr>';}catch(e){document.querySelector('#analytics-error').textContent=e.message;}});
