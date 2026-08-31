@@ -17,8 +17,15 @@ async function load(){ state = await api.get('/staff'); render(); }
 qs('#invite-form').addEventListener('submit', async e=>{
   e.preventDefault();
   const button=qs('#invite-submit'); setButtonLoading(button,true,'Sending…');
-  try { await api.post('/staff/invitations',{email:qs('#invite-email').value.trim(),role:qs('#invite-role').value}); qs('#invite-form').reset(); qs('#invite-dialog').close(); toast('Invitation created.'); await load(); }
-  catch(err){ toast(err.message,'error'); }
+  try {
+    const invitation = await api.post('/staff/invitations',{email:qs('#invite-email').value.trim(),role:qs('#invite-role').value});
+    qs('#invite-form').reset();
+    qs('#invite-dialog').close();
+    state.invitations = [invitation, ...state.invitations.filter(i => i.id !== invitation.id)];
+    render();
+    toast('Invitation created.');
+  }
+  catch(err){ toast(err.message || 'Unable to create invitation.','error'); }
   finally{ setButtonLoading(button,false); }
 });
 qs('#open-invite').addEventListener('click',()=>qs('#invite-dialog').showModal());
@@ -26,8 +33,13 @@ qs('#invitations-body').addEventListener('click',async e=>{
   const button=e.target.closest('.revoke-invite'); if(!button)return;
   if(!confirm('Revoke this pending invitation?')) return;
   button.disabled=true;
-  try{await api.post(`/staff/invitations/${encodeURIComponent(button.dataset.id)}/revoke`);toast('Invitation revoked.');await load();}
-  catch(err){toast(err.message,'error');button.disabled=false;}
+  try{
+    await api.post(`/staff/invitations/${encodeURIComponent(button.dataset.id)}/revoke`);
+    state.invitations = state.invitations.filter(i => i.id !== button.dataset.id);
+    render();
+    toast('Invitation revoked.');
+  }
+  catch(err){toast(err.message || 'Unable to revoke invitation.','error');button.disabled=false;}
 });
 
-document.addEventListener('DOMContentLoaded',async()=>{if(!(await protectPage()))return;try{await load();}catch(err){qs('#page-error').textContent=err.message;}});
+document.addEventListener('DOMContentLoaded',async()=>{if(!(await protectPage()))return;try{await load();}catch(err){qs('#page-error').textContent=err.message || 'Unable to load team data.';}});
