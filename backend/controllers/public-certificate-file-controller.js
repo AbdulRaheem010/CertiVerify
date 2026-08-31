@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { prisma } from '../config/prisma.js';
+import { env } from '../config/env.js';
 import { localStorageRoot } from '../services/storage-service.js';
 import { generateCertificateAssets } from '../services/certificate-renderer.js';
 import { publicStatus } from '../utils/certificate.js';
@@ -19,6 +20,52 @@ function unavailable() {
   return error;
 }
 
+async function readSupabaseFile(fileUrl) {
+  const marker = `supabase://${env.supabaseStorageBucket}/`;
+  if (!fileUrl?.startsWith(marker)) return null;
+  const objectPath = fileUrl.slice(marker.length);
+  if (!objectPath.startsWith('certificates/')) return null;
+
+  const response = await fetch(
+    `${env.supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(env.supabaseStorageBucket)}/${objectPath.split('/').map(encodeURIComponent).join('/')}`,
+    {
+      headers: {
+        Authorization: `Bearer ${env.supabaseStorageKey}`,
+        apikey: env.supabaseStorageKey,
+      },
+    },
+  );
+
+  if (!response.ok) return null;
+  return Buffer.from(await response.arrayBuffer());
+}
+
+async function readLocalFile(fileUrl) {
+  if (!fileUrl?.startsWith('/files/')) return null;
+  const encodedName = fileUrl.slice('/files/'.length);
+  let filename;
+  try {
+    filename = decodeURIComponent(encodedName);
+  } catch {
+    return null;
+  }
+  if (!/^[a-zA-Z0-9-]+\.pdf$/.test(filename)) return null;
+  const root = path.resolve(localStorageRoot);
+  const filePath = path.resolve(root, filename);
+  if (!filePath.startsWith(`${root}${path.sep}`)) return null;
+  try {
+    return await readFile(filePath);
+  } catch {
+    return null;
+  }
+}
+
+async function readStoredFile(fileUrl) {
+  if (!fileUrl) return null;
+  if (fileUrl.startsWith('supabase://')) return readSupabaseFile(fileUrl);
+  return readLocalFile(fileUrl);
+}
+
 export async function download(req, res) {
   const certificate = await prisma.certificate.findUnique({
     where: { certificateId: req.params.certificateId.toUpperCase() },
@@ -28,38 +75,18 @@ export async function download(req, res) {
   if (!certificate) throw notFound();
   if (publicStatus(certificate) !== 'VALID') throw unavailable();
 
-  const readStored = async (fileUrl) => {
-    if (!fileUrl?.startsWith('/files/')) return null;
-    const encodedName = fileUrl.slice('/files/'.length);
-    let filename;
-    try {
-      filename = decodeURIComponent(encodedName);
-    } catch {
-      return null;
-    }
-    if (!/^[a-zA-Z0-9-]+\.pdf$/.test(filename)) return null;
-    const root = path.resolve(localStorageRoot);
-    const filePath = path.resolve(root, filename);
-    if (!filePath.startsWith(`${root}${path.sep}`)) return null;
-    try {
-      return await readFile(filePath);
-    } catch {
-      return null;
-    }
-  };
-
-  let buffer = await readStored(certificate.certificateFileUrl);
+  let buffer = await readStoredFile(certificate.certificateFileUrl);
 
   if (!buffer) {
     const assets = await generateCertificateAssets(certificate);
     await prisma.certificate.update({ where: { id: certificate.id }, data: assets });
-    buffer = await readStored(assets.certificateFileUrl);
+    buffer = await readStoredFile(assets.certificateFileUrl);
   }
 
   if (!buffer) throw notFound();
 
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${certificate.certificateId}.pdf"`);
+  res.setHeader('Content-Disposition', `inline; filename="${certificate.certificateId}.pdf"`);
   res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.send(buffer);
