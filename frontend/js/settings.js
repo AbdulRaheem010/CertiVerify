@@ -5,12 +5,17 @@ import { escapeHtml, formatDate, toast, setButtonLoading } from './utils.js';
 const qs = (s) => document.querySelector(s);
 let state = { members: [], invitations: [] };
 
-function roleLabel(role){ return role.replaceAll('_',' ').replace('ORGANIZATION ',''); }
+function roleLabel(role){ return String(role || '').replaceAll('_',' ').replace('ORGANIZATION ',''); }
+function safeDate(value){
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : formatDate(date.toISOString());
+}
 function render(){
   const membersBody = qs('#members-body');
   const invitesBody = qs('#invitations-body');
-  membersBody.innerHTML = state.members.length ? state.members.map(m=>`<tr><td><strong>${escapeHtml(m.user?.name || '—')}</strong><br><small>${escapeHtml(m.user?.email || '')}</small></td><td>${escapeHtml(roleLabel(m.role))}</td><td><span class="badge"><span></span> ${m.isActive?'Active':'Inactive'}</span></td><td>${formatDate(m.createdAt)}</td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No staff members yet.</td></tr>`;
-  invitesBody.innerHTML = state.invitations.length ? state.invitations.map(i=>`<tr><td><strong>${escapeHtml(i.email)}</strong></td><td>${escapeHtml(roleLabel(i.role))}</td><td>${formatDate(i.expiresAt)}</td><td><button class="button secondary small revoke-invite" data-id="${escapeHtml(i.id)}">Revoke</button></td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No pending invitations.</td></tr>`;
+  membersBody.innerHTML = state.members.length ? state.members.map(m=>`<tr><td><strong>${escapeHtml(m.user?.name || '—')}</strong><br><small>${escapeHtml(m.user?.email || '')}</small></td><td>${escapeHtml(roleLabel(m.role))}</td><td><span class="badge"><span></span> ${m.isActive?'Active':'Inactive'}</span></td><td>${safeDate(m.createdAt)}</td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No staff members yet.</td></tr>`;
+  invitesBody.innerHTML = state.invitations.length ? state.invitations.map(i=>`<tr><td><strong>${escapeHtml(i.email)}</strong></td><td>${escapeHtml(roleLabel(i.role))}</td><td>${safeDate(i.expiresAt)}</td><td><button class="button secondary small revoke-invite" data-id="${escapeHtml(i.id)}">Revoke</button></td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No pending invitations.</td></tr>`;
 }
 async function load(){ state = await api.get('/staff'); render(); }
 
