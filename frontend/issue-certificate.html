@@ -21,99 +21,32 @@
       <a href="/templates.html">Templates</a>
       <a href="/analytics.html">Analytics</a>
       <a href="/audit-logs.html">Audit log</a>
+      <a href="/settings.html">Team &amp; Settings</a>
     </nav>
     <button data-logout class="sidebar-logout">Sign out</button>
   </aside>
-
   <main class="app-main">
     <header class="app-header">
-      <div>
-        <p class="eyebrow">CREDENTIALS</p>
-        <h1>Issue certificate</h1>
-        <p class="muted">Create a verified credential for a recipient in this workspace.</p>
-      </div>
+      <div><p class="eyebrow">CREDENTIALS</p><h1>Issue certificate</h1><p class="muted">Create a verified credential for a recipient in this workspace.</p></div>
       <a class="button secondary" href="/certificates.html">View certificates</a>
     </header>
-
     <section class="workspace-section">
       <div id="issue-message" class="error-text" aria-live="polite"></div>
       <form id="issue-form" class="form-grid">
-        <label>
-          Recipient
-          <select id="recipientId" name="recipientId" required>
-            <option value="">Loading recipients…</option>
-          </select>
-        </label>
-
-        <label>
-          Course / programme
-          <select id="courseId" name="courseId" required>
-            <option value="">Loading courses…</option>
-          </select>
-        </label>
-
-        <label>
-          Certificate title
-          <input id="title" name="title" type="text" maxlength="160" required placeholder="Certificate of Completion">
-        </label>
-
-        <label>
-          Template
-          <select id="templateId" name="templateId">
-            <option value="">Use default template</option>
-          </select>
-        </label>
-
-        <label>
-          Issue date
-          <input id="issueDate" name="issueDate" type="date" required>
-        </label>
-
-        <label>
-          Expiry date <span class="muted">(optional)</span>
-          <input id="expiryDate" name="expiryDate" type="date">
-        </label>
-
-        <label>
-          Grade <span class="muted">(optional)</span>
-          <input id="grade" name="grade" type="text" maxlength="30" placeholder="Distinction">
-        </label>
-
-        <label>
-          Score <span class="muted">(optional)</span>
-          <input id="score" name="score" type="number" min="0" max="100" step="0.01" placeholder="95">
-        </label>
-
-        <label>
-          Credential level <span class="muted">(optional)</span>
-          <input id="credentialLevel" name="credentialLevel" type="text" maxlength="100" placeholder="Professional">
-        </label>
-
-        <label>
-          Issuer name <span class="muted">(optional)</span>
-          <input id="issuerName" name="issuerName" type="text" maxlength="120" placeholder="Your organization">
-        </label>
-
-        <label>
-          Issuer title <span class="muted">(optional)</span>
-          <input id="issuerTitle" name="issuerTitle" type="text" maxlength="120" placeholder="Director / Head of Training">
-        </label>
-
-        <div class="form-actions">
-          <button id="submit-button" class="button" type="submit">Issue secure certificate</button>
-          <a class="button secondary" href="/dashboard.html">Cancel</a>
-        </div>
+        <label>Recipient<select id="recipientId" name="recipientId" required><option value="">Loading recipients…</option></select></label>
+        <label>Course / programme<select id="courseId" name="courseId" required><option value="">Loading courses…</option></select></label>
+        <label>Certificate title<input id="title" name="title" type="text" maxlength="160" required placeholder="Certificate of Completion"></label>
+        <label>Template<select id="templateId" name="templateId"><option value="">Use default template</option></select></label>
+        <label>Issue date<input id="issueDate" name="issueDate" type="date" required></label>
+        <label>Expiry date <span class="muted">(optional)</span><input id="expiryDate" name="expiryDate" type="date"></label>
+        <label>Grade <span class="muted">(optional)</span><input id="grade" name="grade" type="text" maxlength="30" placeholder="Distinction"></label>
+        <label>Score <span class="muted">(optional)</span><input id="score" name="score" type="number" min="0" max="100" step="0.01" placeholder="95"></label>
+        <label>Credential level <span class="muted">(optional)</span><input id="credentialLevel" name="credentialLevel" type="text" maxlength="100" placeholder="Professional"></label>
+        <label>Issuer name <span class="muted">(optional)</span><input id="issuerName" name="issuerName" type="text" maxlength="120" placeholder="Your organization"></label>
+        <label>Issuer title <span class="muted">(optional)</span><input id="issuerTitle" name="issuerTitle" type="text" maxlength="120" placeholder="Director / Head of Training"></label>
+        <div class="form-actions"><button id="submit-button" class="button" type="submit">Issue secure certificate</button><a class="button secondary" href="/dashboard.html">Cancel</a></div>
       </form>
-
-      <div id="issue-result" class="success-card" hidden aria-live="polite">
-        <span class="eyebrow accent">CERTIFICATE ISSUED</span>
-        <h2 id="result-title">Certificate created</h2>
-        <p id="result-meta"></p>
-        <div class="button-row">
-          <a id="download-link" class="button" href="#" target="_blank" rel="noopener">Open certificate</a>
-          <a id="verify-link" class="button secondary" href="#" target="_blank" rel="noopener">Open verification</a>
-        </div>
-      </div>
+      <div id="issue-result" class="success-card" hidden aria-live="polite"><span class="eyebrow accent">CERTIFICATE ISSUED</span><h2 id="result-title">Certificate created</h2><p id="result-meta"></p><div class="button-row"><a id="download-link" class="button" href="#" target="_blank" rel="noopener">Open certificate</a><a id="verify-link" class="button secondary" href="#" target="_blank" rel="noopener">Open verification</a></div></div>
     </section>
   </main>
 </body>
