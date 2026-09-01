@@ -12,7 +12,7 @@ import * as publicCertificateFiles from '../controllers/public-certificate-file-
 import multer from 'multer';
 import * as pub from '../controllers/public-controller.js';
 import { requireAuth, requireTenant, allowRoles } from '../middleware/auth.js';
-import { validate, registerSchema, loginSchema, courseSchema, recipientSchema, certificateSchema, revokeSchema, reissueSchema, templateSchema, recipientUpdateSchema, staffInvitationSchema, acceptInvitationSchema } from '../validators/schemas.js';
+import { validate, registerSchema, loginSchema, courseSchema, recipientSchema, certificateSchema, revokeSchema, reissueSchema, templateSchema, recipientUpdateSchema, staffInvitationSchema, acceptInvitationSchema, staffMemberUpdateSchema } from '../validators/schemas.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1, fields: 0 } });
@@ -35,6 +35,7 @@ router.get('/audit-logs', tenant.auditLogs);
 router.get('/staff', allowRoles('ORGANIZATION_OWNER'), staff.list);
 router.post('/staff/invitations', allowRoles('ORGANIZATION_OWNER'), validate(staffInvitationSchema), staff.invite);
 router.post('/staff/invitations/:id/revoke', allowRoles('ORGANIZATION_OWNER'), staff.revoke);
+router.patch('/staff/:id', allowRoles('ORGANIZATION_OWNER'), validate(staffMemberUpdateSchema), staff.updateMember);
 router.route('/templates').get(templates.list).post(issueRoles, validate(templateSchema), templates.create);
 router.patch('/templates/:id', issueRoles, validate(templateSchema), templates.update);
 router.post('/templates/:id/duplicate', issueRoles, templates.duplicate);
