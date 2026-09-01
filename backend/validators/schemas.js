@@ -11,3 +11,4 @@ export const templateSchema = z.object({ name: z.string().trim().min(2).max(100)
 export const recipientUpdateSchema = recipientSchema.partial().refine((value) => Object.keys(value).length > 0, 'Provide at least one editable field.');
 export const staffInvitationSchema = z.object({ email: z.string().trim().email().max(254), role: z.enum(['ORGANIZATION_ADMIN','ORGANIZATION_STAFF']) }).strict();
 export const acceptInvitationSchema = z.object({ token: z.string().min(32).max(200), name: z.string().trim().min(2).max(100), password: z.string().min(12).max(128) }).strict();
+export const staffMemberUpdateSchema = z.object({ role: z.enum(['ORGANIZATION_ADMIN','ORGANIZATION_STAFF']).optional(), isActive: z.boolean().optional() }).strict().refine((value) => Object.keys(value).length > 0, 'Provide at least one staff member update.');
