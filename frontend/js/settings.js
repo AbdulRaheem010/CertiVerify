@@ -21,16 +21,39 @@ async function load(){ state = await api.get('/staff'); render(); }
 
 qs('#invite-form').addEventListener('submit', async e=>{
   e.preventDefault();
-  const button=qs('#invite-submit'); setButtonLoading(button,true,'Sending…');
+  const button=qs('#invite-submit');
+  const email = qs('#invite-email').value.trim().toLowerCase();
+  const role = qs('#invite-role').value;
+  setButtonLoading(button,true,'Sending…');
   try {
-    const invitation = await api.post('/staff/invitations',{email:qs('#invite-email').value.trim(),role:qs('#invite-role').value});
-    qs('#invite-form').reset();
-    qs('#invite-dialog').close();
-    state.invitations = [invitation, ...state.invitations.filter(i => i.id !== invitation.id)];
-    render();
-    toast('Invitation created.');
+    const invitation = await api.post('/staff/invitations',{email,role});
+    if (invitation?.id) {
+      qs('#invite-form').reset();
+      qs('#invite-dialog').close();
+      state.invitations = [invitation, ...state.invitations.filter(i => i.id !== invitation.id)];
+      render();
+      toast('Invitation created.');
+      return;
+    }
+    throw new Error('The invitation service returned an invalid response.');
   }
-  catch(err){ toast(err.message || 'Unable to create invitation.','error'); }
+  catch(err){
+    // A network interruption can happen after the backend has already committed the invitation.
+    // Re-read the pending invitations so we do not show a false failure to the owner.
+    try {
+      const latest = await api.get('/staff');
+      const existing = latest?.invitations?.find((item) => String(item.email).toLowerCase() === email && item.status === 'PENDING');
+      if (existing) {
+        state = latest;
+        render();
+        qs('#invite-form').reset();
+        qs('#invite-dialog').close();
+        toast('Invitation created.');
+        return;
+      }
+    } catch { /* Keep the original error below. */ }
+    toast(err.message || 'Unable to create invitation.','error');
+  }
   finally{ setButtonLoading(button,false); }
 });
 qs('#open-invite').addEventListener('click',()=>qs('#invite-dialog').showModal());
