@@ -5,7 +5,8 @@ import { env } from '../config/env.js';
 import { ApiError } from '../utils/errors.js';
 
 const key = new TextEncoder().encode(env.jwtSecret);
-const sessionOptions = { httpOnly: true, sameSite: 'lax', secure: env.isProduction, maxAge: 8 * 60 * 60 * 1000, path: '/' };
+const sameSite = env.isProduction ? 'none' : 'lax';
+const sessionOptions = { httpOnly: true, sameSite, secure: env.isProduction, maxAge: 8 * 60 * 60 * 1000, path: '/' };
 
 export async function createSession(user) {
   return new SignJWT({ role: user.role, organizationId: user.organizationId || null })
@@ -20,7 +21,7 @@ export async function createSession(user) {
 
 export function setSession(res, token) {
   res.cookie('cv_session', token, sessionOptions);
-  res.cookie('cv_csrf', crypto.randomUUID(), { httpOnly: false, sameSite: 'lax', secure: env.isProduction, maxAge: sessionOptions.maxAge, path: '/' });
+  res.cookie('cv_csrf', crypto.randomUUID(), { httpOnly: false, sameSite, secure: env.isProduction, maxAge: sessionOptions.maxAge, path: '/' });
 }
 
 export function clearSession(res) {
