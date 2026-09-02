@@ -19,7 +19,7 @@ function render(){
     const statusAction = m.isActive ? 'Deactivate' : 'Activate';
     return `<tr><td><strong>${escapeHtml(m.user?.name || '—')}</strong><br><small>${escapeHtml(m.user?.email || '')}</small></td><td>${protectedOwner ? escapeHtml(roleLabel(m.role)) : `<select class="staff-role" data-id="${escapeHtml(m.id)}" aria-label="Role for ${escapeHtml(m.user?.name || 'team member')}"><option value="ORGANIZATION_ADMIN" ${m.role==='ORGANIZATION_ADMIN'?'selected':''}>Organization Admin</option><option value="ORGANIZATION_STAFF" ${m.role==='ORGANIZATION_STAFF'?'selected':''}>Organization Staff</option></select>`}</td><td><span class="badge"><span></span> ${m.isActive?'Active':'Inactive'}</span></td><td>${safeDate(m.createdAt)}</td><td>${protectedOwner ? '—' : `<button class="button secondary small toggle-member" data-id="${escapeHtml(m.id)}" data-active="${m.isActive}">${statusAction}</button>`}</td></tr>`;
   }).join('') : `<tr><td colspan="5" class="empty-state">No staff members yet.</td></tr>`;
-  invitesBody.innerHTML = state.invitations.length ? state.invitations.map(i=>`<tr><td><strong>${escapeHtml(i.email)}</strong></td><td>${escapeHtml(roleLabel(i.role))}</td><td>${safeDate(i.expiresAt)}</td><td class="invite-actions"><button class="button secondary small copy-invite" data-url="${escapeHtml(i.inviteUrl || '')}" ${i.inviteUrl ? '' : 'disabled'}>Copy link</button><button class="button secondary small revoke-invite" data-id="${escapeHtml(i.id)}">Revoke</button></td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No pending invitations.</td></tr>`;
+  invitesBody.innerHTML = state.invitations.length ? state.invitations.map(i=>`<tr><td><strong>${escapeHtml(i.email)}</strong></td><td>${escapeHtml(roleLabel(i.role))}</td><td>${safeDate(i.expiresAt)}</td><td class="invite-actions"><button class="button secondary small resend-invite" data-id="${escapeHtml(i.id)}">Resend / Copy</button><button class="button secondary small revoke-invite" data-id="${escapeHtml(i.id)}">Revoke</button></td></tr>`).join('') : `<tr><td colspan="4" class="empty-state">No pending invitations.</td></tr>`;
 }
 async function load(){ state = await api.get('/staff'); render(); }
 
@@ -86,11 +86,19 @@ qs('#members-body').addEventListener('click',async e=>{
   }catch(err){toast(err.message || 'Unable to update team member.','error');button.disabled=false;}
 });
 qs('#invitations-body').addEventListener('click',async e=>{
-  const copy=e.target.closest('.copy-invite');
-  if(copy){
-    const url=copy.dataset.url;
-    if(!url)return;
-    try{await navigator.clipboard.writeText(url);toast('Invitation link copied.');}catch{toast('Unable to copy automatically. Please copy the link from the browser address bar after opening it.','error');}
+  const resend=e.target.closest('.resend-invite');
+  if(resend){
+    if(!confirm('Generate a new invitation link and resend this invitation? The previous link will stop working.')) return;
+    setButtonLoading(resend,true,'Resending…');
+    try{
+      const invitation=await api.post(`/staff/invitations/${encodeURIComponent(resend.dataset.id)}/resend`);
+      if(invitation?.inviteUrl){
+        try{await navigator.clipboard.writeText(invitation.inviteUrl);}catch{ /* Email delivery still works even if clipboard is unavailable. */ }
+      }
+      state.invitations=state.invitations.map(i=>i.id===invitation.id?invitation:i);
+      render();
+      toast(invitation.emailDelivered ? 'Invitation resent and link copied.' : 'New invitation link generated and copied. Send it manually.');
+    }catch(err){toast(err.message || 'Unable to resend invitation.','error');setButtonLoading(resend,false);}
     return;
   }
   const button=e.target.closest('.revoke-invite'); if(!button)return;
