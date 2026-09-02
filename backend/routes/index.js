@@ -17,7 +17,7 @@ import { validate, registerSchema, loginSchema, courseSchema, recipientSchema, c
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1, fields: 0 } });
 const issueRoles = allowRoles('ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ORGANIZATION_STAFF');
-const publicVerificationLimit = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many verification attempts. Please wait a minute.' } } });
+const publicVerificationLimit = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many verification attempts. Please wait a minute.' } });
 router.get('/health', pub.health);
 router.post('/auth/register', validate(registerSchema), auth.register);
 router.post('/auth/login', validate(loginSchema), auth.login);
@@ -34,6 +34,7 @@ router.get('/analytics', tenant.analytics);
 router.get('/audit-logs', tenant.auditLogs);
 router.get('/staff', allowRoles('ORGANIZATION_OWNER'), staff.list);
 router.post('/staff/invitations', allowRoles('ORGANIZATION_OWNER'), validate(staffInvitationSchema), staff.invite);
+router.post('/staff/invitations/:id/resend', allowRoles('ORGANIZATION_OWNER'), staff.resend);
 router.post('/staff/invitations/:id/revoke', allowRoles('ORGANIZATION_OWNER'), staff.revoke);
 router.patch('/staff/:id', allowRoles('ORGANIZATION_OWNER'), validate(staffMemberUpdateSchema), staff.updateMember);
 router.route('/templates').get(templates.list).post(issueRoles, validate(templateSchema), templates.create);
