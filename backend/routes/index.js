@@ -17,7 +17,7 @@ import { validate, registerSchema, loginSchema, courseSchema, recipientSchema, c
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1, fields: 0 } });
 const issueRoles = allowRoles('ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ORGANIZATION_STAFF');
-const publicVerificationLimit = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many verification attempts. Please wait a minute.' } });
+const publicVerificationLimit = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many verification attempts. Please wait a minute.' } } });
 router.get('/health', pub.health);
 router.post('/auth/register', validate(registerSchema), auth.register);
 router.post('/auth/login', validate(loginSchema), auth.login);
