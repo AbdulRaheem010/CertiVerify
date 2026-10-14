@@ -30,19 +30,34 @@ export function clearSession(res) {
 }
 
 export async function requireAuth(req, _res, next) {
+  let stage = 'read-cookie';
   try {
     const token = req.cookies.cv_session;
-    if (!token) throw new Error('No session');
+    if (!token) throw new Error('No session cookie');
+
+    stage = 'verify-token';
     const { payload } = await jwtVerify(token, key, { issuer: 'certiverify', audience: 'certiverify-web' });
+
+    stage = 'find-user';
     const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, role: true } });
-    if (!user || user.role !== payload.role) throw new Error('Stale session');
+    if (!user || user.role !== payload.role) throw new Error('User missing or role mismatch');
+
     if (['ORGANIZATION_OWNER', 'ORGANIZATION_ADMIN', 'ORGANIZATION_STAFF'].includes(user.role)) {
-      const membership = await prisma.organizationMember.findUnique({ where: { userId_organizationId: { userId: user.id, organizationId: payload.organizationId } }, include: { organization: { select: { status: true } } } });
-      if (!membership || !membership.isActive || membership.role !== user.role || membership.organization.status !== 'ACTIVE') throw new Error('Inactive membership');
+      stage = 'check-membership';
+      const membership = await prisma.organizationMember.findUnique({
+        where: { userId_organizationId: { userId: user.id, organizationId: payload.organizationId } },
+        include: { organization: { select: { status: true } } }
+      });
+      if (!membership || !membership.isActive || membership.role !== user.role || membership.organization.status !== 'ACTIVE') {
+        throw new Error('Membership missing, inactive, role mismatch, or organization not active');
+      }
     }
+
     req.auth = { userId: user.id, role: user.role, organizationId: user.role === 'SUPER_ADMIN' ? null : payload.organizationId };
     next();
-  } catch {
+  } catch (error) {
+    // Never log cookies, tokens, or other credentials.
+    console.warn(`[auth] Session rejected at ${stage}: ${error?.message || 'unknown error'}`);
     next(new ApiError(401, 'Please sign in to continue.', 'UNAUTHENTICATED'));
   }
 }
