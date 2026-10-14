@@ -54,7 +54,8 @@ export async function requireAuth(req, _res, next) {
         console.warn('[auth] Membership diagnostics:', {
           membershipFound: Boolean(membership),
           isActive: membership?.isActive ?? null,
-          roleMatchesUser: membership ? membership.role === user.role : null,
+          userRole: user.role,
+          membershipRole: membership?.role ?? null,
           organizationStatus: membership?.organization?.status ?? null
         });
         throw new Error('Organization membership validation failed');
