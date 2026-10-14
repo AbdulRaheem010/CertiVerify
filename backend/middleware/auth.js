@@ -48,8 +48,16 @@ export async function requireAuth(req, _res, next) {
         where: { userId_organizationId: { userId: user.id, organizationId: payload.organizationId } },
         include: { organization: { select: { status: true } } }
       });
+
       if (!membership || !membership.isActive || membership.role !== user.role || membership.organization.status !== 'ACTIVE') {
-        throw new Error('Membership missing, inactive, role mismatch, or organization not active');
+        // Log only boolean/status diagnostics; never log user IDs, tokens, or cookies.
+        console.warn('[auth] Membership diagnostics:', {
+          membershipFound: Boolean(membership),
+          isActive: membership?.isActive ?? null,
+          roleMatchesUser: membership ? membership.role === user.role : null,
+          organizationStatus: membership?.organization?.status ?? null
+        });
+        throw new Error('Organization membership validation failed');
       }
     }
 
