@@ -17,23 +17,17 @@ async function sendWithResend({ to, subject, text, html }) {
   });
 
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.message || payload?.error?.message || `Email provider returned ${response.status}.`);
-  }
+  if (!response.ok) throw new Error(payload?.message || payload?.error?.message || `Email provider returned ${response.status}.`);
   return { delivered: true, mode: 'resend', id: payload?.id || null };
 }
 
 export async function sendEmail({ to, subject, text, html }) {
-  if (process.env.RESEND_API_KEY) {
-    return sendWithResend({ to, subject, text, html });
-  }
-
+  if (process.env.RESEND_API_KEY) return sendWithResend({ to, subject, text, html });
   if (!env.isProduction) {
     console.info('[CertiVerify development email]', { to, subject, text });
     return { delivered: false, mode: 'development-log' };
   }
-
-  console.error('[CertiVerify email]', 'RESEND_API_KEY is not configured.');
+  console.error('[CertiVerify email] RESEND_API_KEY is not configured.');
   return { delivered: false, mode: 'not-configured' };
 }
 
@@ -42,6 +36,13 @@ export const sendStaffInvitationEmail = ({ email, organizationName, role, url })
   subject: `Join ${organizationName} on CertiVerify`,
   text: `You have been invited as ${role === 'ORGANIZATION_ADMIN' ? 'Organization Admin' : 'Organization Staff'} on CertiVerify.\n\nAccept your invitation: ${url}\n\nThis invitation expires in 7 days and can only be used once.`,
   html: `<p>You have been invited as <strong>${role === 'ORGANIZATION_ADMIN' ? 'Organization Admin' : 'Organization Staff'}</strong> on CertiVerify.</p><p><a href="${url}">Accept invitation</a></p><p>This invitation expires in 7 days and can only be used once.</p>`,
+});
+
+export const sendPasswordResetEmail = ({ email, name, url }) => sendEmail({
+  to: email,
+  subject: 'Reset your CertiVerify password',
+  text: `Hello ${name || 'there'},\n\nWe received a request to reset your CertiVerify password. Use this link to choose a new password:\n${url}\n\nThis link expires in 30 minutes and can only be used once. If you did not request this, you can ignore this email.`,
+  html: `<p>Hello ${name || 'there'},</p><p>We received a request to reset your CertiVerify password.</p><p><a href="${url}">Reset my password</a></p><p>This link expires in 30 minutes and can only be used once. If you did not request this, you can ignore this email.</p>`,
 });
 
 export const sendCertificateIssuedEmail = ({ email, title, certificateId, url }) => sendEmail({
